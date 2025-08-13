@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "azure-synapse": {
+      "command": "node",
+      "args": ["/Users/bibranch/azure-synapse-mcp-server/dist/index.js"],
+      "env": {
+        "NODE_ENV": "development",
+        "READONLY_MODE": "true"
+      }
+    }
+  }
+}

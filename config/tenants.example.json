@@ -1,0 +1,38 @@
+{
+  "defaultTenant": "tenant1",
+  "tenants": [
+    {
+      "id": "tenant1",
+      "name": "Production Workspace",
+      "subscriptionId": "your-subscription-id",
+      "resourceGroup": "your-resource-group",
+      "workspaceName": "your-workspace-name",
+      "serverlessEndpoint": "your-workspace-ondemand.sql.azuresynapse.net",
+      "dedicatedPools": [
+        {
+          "name": "DedicatedPool1",
+          "endpoint": "your-workspace.sql.azuresynapse.net",
+          "database": "YourDatabase"
+        }
+      ],
+      "authMethod": "cli",
+      "credentials": {
+        "comment": "For CLI auth, no credentials needed. For other methods, add appropriate fields"
+      }
+    },
+    {
+      "id": "tenant2",
+      "name": "Development Workspace",
+      "subscriptionId": "your-dev-subscription-id",
+      "resourceGroup": "your-dev-resource-group",
+      "workspaceName": "your-dev-workspace-name",
+      "serverlessEndpoint": "your-dev-workspace-ondemand.sql.azuresynapse.net",
+      "authMethod": "serviceprincipal",
+      "credentials": {
+        "tenantId": "your-azure-tenant-id",
+        "clientId": "your-service-principal-client-id",
+        "clientSecret": "your-service-principal-client-secret"
+      }
+    }
+  ]
+}
