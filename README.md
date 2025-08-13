@@ -207,6 +207,71 @@ Add the following to your Claude Desktop configuration file:
 ### Data Migration
 - `data_migration_helper` - Generate migration scripts between databases
 
+### Spark Notebooks
+- `list_notebooks` - List all Spark notebooks in the workspace
+- `create_notebook` - Create a new Spark notebook (PySpark, Scala, C#, SQL)
+- `get_notebook` - Get details of a specific notebook
+- `delete_notebook` - Delete a Spark notebook
+- `list_spark_pools` - List available Spark pools (requires ARM API integration)
+
+### Linked Services & Integration
+- `list_linked_services` - List all linked services in the workspace
+- `get_linked_service` - Get details of a specific linked service
+- `list_datasets` - List all integration datasets
+- `get_dataset` - Get details of a specific dataset
+- `list_integration_runtimes` - List integration runtimes (requires ARM API integration)
+
+## Usage Examples
+
+### Creating a Spark Notebook
+
+```json
+{
+  "tool": "create_notebook",
+  "arguments": {
+    "workspace": "my-synapse-workspace",
+    "notebookName": "DataAnalysis",
+    "language": "pyspark",
+    "sparkPoolName": "SparkPool01",
+    "initialContent": "# Welcome to data analysis\\ndf = spark.read.csv('data.csv', header=True)\\ndf.show()"
+  }
+}
+```
+
+### Listing Linked Services
+
+```json
+{
+  "tool": "list_linked_services",
+  "arguments": {
+    "workspace": "my-synapse-workspace"
+  }
+}
+```
+
+### Getting Dataset Information
+
+```json
+{
+  "tool": "get_dataset",
+  "arguments": {
+    "workspace": "my-synapse-workspace",
+    "datasetName": "CustomerData"
+  }
+}
+```
+
+### Managing Notebooks
+
+```json
+{
+  "tool": "list_notebooks",
+  "arguments": {
+    "workspace": "my-synapse-workspace"
+  }
+}
+```
+
 ## Security Best Practices
 
 1. **Authentication**

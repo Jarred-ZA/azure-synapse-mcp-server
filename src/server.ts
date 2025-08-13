@@ -10,6 +10,8 @@ import { SynapseOperations } from './operations/synapse-operations.js';
 import { PipelineOperations } from './operations/pipeline-operations.js';
 import { StoredProcedureOperations } from './operations/stored-procedure-operations.js';
 import { DataFlowOperations } from './operations/dataflow-operations.js';
+import { SparkNotebookOperations } from './operations/spark-notebook-operations.js';
+import { LinkedServiceOperations } from './operations/linked-service-operations.js';
 import { logger } from './utils/logger.js';
 import { TenantManager } from './utils/tenant-manager.js';
 import { ConnectionPool } from './utils/connection-pool.js';
@@ -79,12 +81,74 @@ const DataMigrationSchema = z.object({
   tenant: z.string().optional()
 });
 
+// Spark Notebook Schemas
+const ListNotebooksSchema = z.object({
+  workspace: z.string().describe('Synapse workspace name'),
+  tenant: z.string().optional()
+});
+
+const CreateNotebookSchema = z.object({
+  workspace: z.string().describe('Synapse workspace name'),
+  notebookName: z.string().describe('Name for the new notebook'),
+  language: z.enum(['pyspark', 'scala', 'csharp', 'sql']).optional().default('pyspark'),
+  sparkPoolName: z.string().optional().describe('Spark pool to attach to'),
+  initialContent: z.string().optional().describe('Initial code content'),
+  tenant: z.string().optional()
+});
+
+const GetNotebookSchema = z.object({
+  workspace: z.string().describe('Synapse workspace name'),
+  notebookName: z.string().describe('Name of the notebook'),
+  tenant: z.string().optional()
+});
+
+const DeleteNotebookSchema = z.object({
+  workspace: z.string().describe('Synapse workspace name'),
+  notebookName: z.string().describe('Name of the notebook to delete'),
+  tenant: z.string().optional()
+});
+
+const ListSparkPoolsSchema = z.object({
+  workspace: z.string().describe('Synapse workspace name'),
+  tenant: z.string().optional()
+});
+
+// Linked Service Schemas
+const ListLinkedServicesSchema = z.object({
+  workspace: z.string().describe('Synapse workspace name'),
+  tenant: z.string().optional()
+});
+
+const GetLinkedServiceSchema = z.object({
+  workspace: z.string().describe('Synapse workspace name'),
+  linkedServiceName: z.string().describe('Name of the linked service'),
+  tenant: z.string().optional()
+});
+
+const ListDatasetsSchema = z.object({
+  workspace: z.string().describe('Synapse workspace name'),
+  tenant: z.string().optional()
+});
+
+const GetDatasetSchema = z.object({
+  workspace: z.string().describe('Synapse workspace name'),
+  datasetName: z.string().describe('Name of the dataset'),
+  tenant: z.string().optional()
+});
+
+const ListIntegrationRuntimesSchema = z.object({
+  workspace: z.string().describe('Synapse workspace name'),
+  tenant: z.string().optional()
+});
+
 export class AzureSynapseMCPServer {
   private server: Server;
   private synapseOps: SynapseOperations;
   private pipelineOps: PipelineOperations;
   private storedProcOps: StoredProcedureOperations;
   private dataflowOps: DataFlowOperations;
+  private sparkNotebookOps: SparkNotebookOperations;
+  private linkedServiceOps: LinkedServiceOperations;
   private tenantManager: TenantManager;
   private connectionPool: ConnectionPool;
 
@@ -108,6 +172,8 @@ export class AzureSynapseMCPServer {
     this.pipelineOps = new PipelineOperations(this.tenantManager);
     this.storedProcOps = new StoredProcedureOperations(this.connectionPool, this.tenantManager);
     this.dataflowOps = new DataFlowOperations(this.tenantManager);
+    this.sparkNotebookOps = new SparkNotebookOperations(this.tenantManager);
+    this.linkedServiceOps = new LinkedServiceOperations(this.tenantManager);
 
     this.setupHandlers();
   }
@@ -255,6 +321,138 @@ export class AzureSynapseMCPServer {
             },
             required: ['workspace', 'sourceDatabase', 'targetDatabase']
           }
+        },
+        {
+          name: 'list_notebooks',
+          description: 'List all Spark notebooks in the workspace',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workspace: { type: 'string', description: 'Synapse workspace name' },
+              tenant: { type: 'string', description: 'Optional tenant identifier' }
+            },
+            required: ['workspace']
+          }
+        },
+        {
+          name: 'create_notebook',
+          description: 'Create a new Spark notebook',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workspace: { type: 'string', description: 'Synapse workspace name' },
+              notebookName: { type: 'string', description: 'Name for the new notebook' },
+              language: { 
+                type: 'string', 
+                enum: ['pyspark', 'scala', 'csharp', 'sql'],
+                description: 'Programming language (default: pyspark)'
+              },
+              sparkPoolName: { type: 'string', description: 'Spark pool to attach to' },
+              initialContent: { type: 'string', description: 'Initial code content' },
+              tenant: { type: 'string', description: 'Optional tenant identifier' }
+            },
+            required: ['workspace', 'notebookName']
+          }
+        },
+        {
+          name: 'get_notebook',
+          description: 'Get details of a specific notebook',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workspace: { type: 'string', description: 'Synapse workspace name' },
+              notebookName: { type: 'string', description: 'Name of the notebook' },
+              tenant: { type: 'string', description: 'Optional tenant identifier' }
+            },
+            required: ['workspace', 'notebookName']
+          }
+        },
+        {
+          name: 'delete_notebook',
+          description: 'Delete a Spark notebook',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workspace: { type: 'string', description: 'Synapse workspace name' },
+              notebookName: { type: 'string', description: 'Name of the notebook to delete' },
+              tenant: { type: 'string', description: 'Optional tenant identifier' }
+            },
+            required: ['workspace', 'notebookName']
+          }
+        },
+        {
+          name: 'list_spark_pools',
+          description: 'List all Spark pools in the workspace',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workspace: { type: 'string', description: 'Synapse workspace name' },
+              tenant: { type: 'string', description: 'Optional tenant identifier' }
+            },
+            required: ['workspace']
+          }
+        },
+        {
+          name: 'list_linked_services',
+          description: 'List all linked services in the workspace',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workspace: { type: 'string', description: 'Synapse workspace name' },
+              tenant: { type: 'string', description: 'Optional tenant identifier' }
+            },
+            required: ['workspace']
+          }
+        },
+        {
+          name: 'get_linked_service',
+          description: 'Get details of a specific linked service',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workspace: { type: 'string', description: 'Synapse workspace name' },
+              linkedServiceName: { type: 'string', description: 'Name of the linked service' },
+              tenant: { type: 'string', description: 'Optional tenant identifier' }
+            },
+            required: ['workspace', 'linkedServiceName']
+          }
+        },
+        {
+          name: 'list_datasets',
+          description: 'List all integration datasets in the workspace',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workspace: { type: 'string', description: 'Synapse workspace name' },
+              tenant: { type: 'string', description: 'Optional tenant identifier' }
+            },
+            required: ['workspace']
+          }
+        },
+        {
+          name: 'get_dataset',
+          description: 'Get details of a specific dataset',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workspace: { type: 'string', description: 'Synapse workspace name' },
+              datasetName: { type: 'string', description: 'Name of the dataset' },
+              tenant: { type: 'string', description: 'Optional tenant identifier' }
+            },
+            required: ['workspace', 'datasetName']
+          }
+        },
+        {
+          name: 'list_integration_runtimes',
+          description: 'List all integration runtimes in the workspace',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              workspace: { type: 'string', description: 'Synapse workspace name' },
+              tenant: { type: 'string', description: 'Optional tenant identifier' }
+            },
+            required: ['workspace']
+          }
         }
       ]
     }));
@@ -315,6 +513,58 @@ export class AzureSynapseMCPServer {
           case 'data_migration_helper': {
             const params = DataMigrationSchema.parse(args);
             return await this.synapseOps.dataMigrationHelper(params);
+          }
+
+          // Spark Notebook Operations
+          case 'list_notebooks': {
+            const params = ListNotebooksSchema.parse(args);
+            return await this.sparkNotebookOps.listNotebooks(params);
+          }
+
+          case 'create_notebook': {
+            const params = CreateNotebookSchema.parse(args);
+            return await this.sparkNotebookOps.createNotebook(params);
+          }
+
+          case 'get_notebook': {
+            const params = GetNotebookSchema.parse(args);
+            return await this.sparkNotebookOps.getNotebook(params);
+          }
+
+          case 'delete_notebook': {
+            const params = DeleteNotebookSchema.parse(args);
+            return await this.sparkNotebookOps.deleteNotebook(params);
+          }
+
+          case 'list_spark_pools': {
+            const params = ListSparkPoolsSchema.parse(args);
+            return await this.sparkNotebookOps.listSparkPools(params);
+          }
+
+          // Linked Service Operations
+          case 'list_linked_services': {
+            const params = ListLinkedServicesSchema.parse(args);
+            return await this.linkedServiceOps.listLinkedServices(params);
+          }
+
+          case 'get_linked_service': {
+            const params = GetLinkedServiceSchema.parse(args);
+            return await this.linkedServiceOps.getLinkedService(params);
+          }
+
+          case 'list_datasets': {
+            const params = ListDatasetsSchema.parse(args);
+            return await this.linkedServiceOps.listDatasets(params);
+          }
+
+          case 'get_dataset': {
+            const params = GetDatasetSchema.parse(args);
+            return await this.linkedServiceOps.getDataset(params);
+          }
+
+          case 'list_integration_runtimes': {
+            const params = ListIntegrationRuntimesSchema.parse(args);
+            return await this.linkedServiceOps.listIntegrationRuntimes(params);
           }
 
           default:
